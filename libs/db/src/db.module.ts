@@ -6,8 +6,6 @@ import { Module, Global } from '@nestjs/common';
 import { DbService } from './db.service';
 import { TypegooseModule } from 'nestjs-typegoose';
 import { User } from './models/user.model';
-import { Course } from './models/course.model';
-import { Episode } from './models/episode.model';
 import UP from './models/up.model';
 // tslint:disable-next-line: max-line-length
 import { AnimateData, CartoonData, DailyData, DanceData, DigitalData, DocumentaryData, FashionData, FilmData, FunnyData, GameData, MovieData, MusicData, NationalData, ScienceData, SpoofData, TelevData } from './models/other.model';
@@ -16,8 +14,6 @@ import { AnimateData, CartoonData, DailyData, DanceData, DigitalData, Documentar
 const models = TypegooseModule.forFeature(
   [
     { typegooseClass: User, schemaOptions: { collection: 'user_data' } },
-    Course,
-    Episode,
     { typegooseClass: UP, schemaOptions: { collection: 'up_data' } },
     { typegooseClass: AnimateData, schemaOptions: { collection: 'animate_data' } },
     { typegooseClass: CartoonData, schemaOptions: { collection: 'cartoon_data' } },

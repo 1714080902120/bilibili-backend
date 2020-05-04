@@ -108,30 +108,30 @@ class Items {
 
 }
 // tslint:disable-next-line: max-classes-per-file
-class UserInfo {
+// class UserInfo {
 
-  // 身份标识
-  @prop()
-  @ApiProperty({
-    name: '身份标识',
-  })
-  identy: Identy;
+//   // 身份标识
+//   @prop()
+//   @ApiProperty({
+//     name: '身份标识',
+//   })
+//   identy: Identy;
 
-  // 信息
-  @prop()
-  @ApiProperty({
-    name: '基本信息',
-  })
-  baseInfo: BaseInfo;
+//   // 信息
+//   @prop()
+//   @ApiProperty({
+//     name: '基本信息',
+//   })
+//   baseInfo: BaseInfo;
 
-  // 作品
-  @prop()
-  @ApiProperty({
-    name: '投稿',
-  })
-  cardList: Item[];
+//   // 作品
+//   @prop()
+//   @ApiProperty({
+//     name: '投稿',
+//   })
+//   cardList: Item[];
 
-}
+// }
 
 // tslint:disable-next-line: max-classes-per-file
 @modelOptions({

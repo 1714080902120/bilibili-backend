@@ -1,78 +1,124 @@
+import { JwtService } from '@nestjs/jwt';
 import { UploadData } from './../../../../../libs/db/src/models/upload.model';
 import { FileInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express';
-import { Controller, Get, Query, Res, HttpStatus, Put, Post, UseInterceptors, UploadedFile, UploadedFiles, Body } from '@nestjs/common';
-import { User } from '@libs/db/models/user.model';
+import { Controller, Get, Query, Res, HttpStatus, Put, Post, UseInterceptors, UploadedFile, UploadedFiles, Body, UseGuards } from '@nestjs/common';
+import { User, UserDocument } from '@libs/db/models/user.model';
 import { InjectModel } from 'nestjs-typegoose';
 import { createWriteStream, mkdir } from 'fs';
-import { ApiOperation, ApiTags, ApiQuery, ApiProperty, ApiBody } from '@nestjs/swagger';
+import { ApiOperation, ApiTags, ApiQuery, ApiProperty, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { hashSync, compareSync } from 'bcryptjs';
+import { RegisterDto } from './dto/register.dto';
+import { UpdateDto, PostDto, AddCardDto } from './dto/others.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { LoginDto } from './dto/login.dto';
+import { CurrentUser } from './current-user.decorator.1';
+// tslint:disable-next-line: no-var-requires
+const request = require('request');
 
-class UpdateDto {
-
-  @ApiProperty()
-  username: string;
-
-  @ApiProperty()
-  name: string;
-
-  @ApiProperty()
-  desc: string;
-
-}
-
-// tslint:disable-next-line: max-classes-per-file
-class PostDto {
-
-  @ApiProperty()
-  src: any;
-
-  @ApiProperty()
-  name: string;
-
-}
-
-// tslint:disable-next-line: max-classes-per-file
-class AddCardDto {
-
-  @ApiProperty()
-  type: string;
-
-  @ApiProperty()
-  upname: string;
-
-  @ApiProperty()
-  logoSrc: string;
-
-  @ApiProperty()
-  logoName: string;
-
-  @ApiProperty()
-  uuid: string;
-
-  @ApiProperty()
-  username: string;
-
-  @ApiProperty()
-  ellipsis: string;
-
-  @ApiProperty()
-  time: string;
-
-  @ApiProperty()
-  title: string;
-
-}
-
-// tslint:disable-next-line: max-classes-per-file
 @ApiTags('用户信息')
 @Controller('user')
 export class UserController {
   constructor(
+    private jwtService: JwtService,
     @InjectModel(User) private readonly model,
     @InjectModel(UploadData) private readonly uploadModel,
   ) { }
 
+  @Post('register')
+  @ApiProperty({ name: '注册' })
+  async register(@Res() res, @Body() dto: RegisterDto) {
+    try {
+      const { username, password } = dto;
+      if ((await this.model.find({ username })).length !== 0) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ data: '该用户名已存在', err: -2 });
+      }
+      const uuid = Math.round(50000 + Math.random() * 9949999).toString();
+
+      const identy = {
+        uuid,
+        uuid_href: `https://m.bilibili.com/space/${uuid}`,
+      };
+
+      await mkdir(`bilibili_data/user_data/${uuid}`, err => console.log(err));
+
+      const baseInfo = {
+        bg: {
+          name: `${uuid}_bg.png`,
+          src: `E:/VScode/bilibili/bilibili_data/user_data/${uuid}/`,
+          href: '',
+        },
+        logo: {
+          name: `${uuid}_logo.png`,
+          src: `E:/VScode/bilibili/bilibili_data/user_data/${uuid}/`,
+          href: '',
+        },
+        name: `bilibili用户_${uuid}`,
+        level: '0',
+        label: '',
+        desc: '这人懒死了，什么都没写~~',
+        vip: '',
+        fans_follows_likes: {
+          fans: '0',
+          follows: '0',
+          likes: '0',
+        },
+      };
+
+      const sourceBg = `${process.env.SERVER_BASE_URL}/bilibili_data/bilibili_base/user_bg_init.png`;
+      const sourceLogo = `${process.env.SERVER_BASE_URL}/bilibili_data/bilibili_base/user_avatar_init.png`;
+      const bg = await createWriteStream(`bilibili_data/user_data/${uuid}/${baseInfo.bg.name}`);
+      request(sourceBg, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36',
+        },
+      }).pipe(bg).on('close', err => err);
+
+      const logo = await createWriteStream(`bilibili_data/user_data/${uuid}/${baseInfo.logo.name}`);
+      request(sourceLogo, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36',
+        },
+      }).pipe(logo).on('close', err => err);
+      await mkdir(`bilibili_data/user_data/${uuid}/list`, err => console.log(err) );
+
+      const user = await this.model.create({
+        username,
+        password,
+        identy,
+        baseInfo,
+        cardList: [],
+      });
+      return res.status(HttpStatus.OK).json({ data: user, err: 0 });
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).json({ data: '请检查参数是否正确', err: -1 });
+    }
+  }
+
+  @Post('test')
+  async Test() {
+          const sourceBg = `${process.env.SERVER_BASE_URL}/bilibili_data/bilibili_base/user_bg_init.png`;
+          const bg = await createWriteStream(`bilibili_data/user_data/123.png`);
+          request(sourceBg, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36',
+        },
+      }).pipe(bg).on('close', err => err);
+          // createWriteStream(`bilibili_data/user_data/xxx.png`).write(a);
+  }
+
+  @Post('login')
+  @ApiProperty({ name: '登录' })
+  @UseGuards(AuthGuard('local'))
+  async login(@Body() dto: LoginDto, @CurrentUser() user: UserDocument) {
+    return {
+      token: this.jwtService.sign(String(user._id)),
+    };
+  }
+
   @Get('base-info')
-  @ApiQuery({ name: '这是一个bug', type: String })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiQuery({ type: String })
   @ApiOperation({ description: 'Get, 获取用户数据，参数：username' })
   async baseInfo(@Res() res, @Query() query) {
     try {
@@ -108,13 +154,15 @@ export class UserController {
 
       return res.status(HttpStatus.OK).json(data);
     } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({ data: '请检查参数是否正确', error });
+      return res.status(HttpStatus.BAD_REQUEST).json({ data: '请检查参数是否正确', err: -1 });
     }
 
   }
 
   @Put('update')
-  @ApiQuery({ name: '这是一个bug', type: UpdateDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiQuery({ type: UpdateDto })
   @ApiOperation({ description: 'Put, 更新用户数据，参数：username，用户名name，desc' })
   async Update(@Res() res, @Query() query: UpdateDto) {
     try {
@@ -123,11 +171,13 @@ export class UserController {
       data = await this.model.updateOne({ username }, { $set: { 'baseInfo.name': name, 'baseInfo.desc': desc } });
       return res.status(HttpStatus.OK).json(data);
     } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({ data: '请检查参数是否正确', error });
+      return res.status(HttpStatus.BAD_REQUEST).json({ data: '请检查参数是否正确', err: -1 });
     }
   }
 
   @Post('upload')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
   @ApiBody({ type: PostDto })
   @ApiOperation({ description: 'Post, 更新用户头像或者背景，参数：src, 图像name' })
   @UseInterceptors(FileInterceptor('file'))
@@ -142,13 +192,15 @@ export class UserController {
       ws = await createWriteStream(`${src[src.length - 1]}${name}`).write(file.buffer);
       return res.status(HttpStatus.OK).json({ data: '更新成功！' });
     } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({ data: '请检查参数是否正确', error });
+      return res.status(HttpStatus.BAD_REQUEST).json({ data: '请检查参数是否正确', err: -1 });
     }
 
   }
 
   // 投稿
   @Post('add-card')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
   @ApiBody({ type: AddCardDto })
   @ApiOperation({ description: 'Post, 投稿，参数：type, upname, logoSrc, logoName, uuid, username, ellipsis, 视频时长time, title， 两个文件封面cover[]和video[]' })
   @UseInterceptors(FileFieldsInterceptor([
@@ -159,7 +211,7 @@ export class UserController {
     try {
 
       // tslint:disable-next-line: max-line-length
-      const arr: any[] = [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 ];
+      const arr: any[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
       const location = 'bilibili_data/upload_data/';
 
       const bvid = `BV${arr[Math.round(Math.random() * 71)]}${arr[Math.round(Math.random() * 71)]}${arr[Math.round(Math.random() * 71)]}${arr[Math.round(Math.random() * 71)]}${arr[Math.round(Math.random() * 71)]}${arr[Math.round(Math.random() * 71)]}${arr[Math.round(Math.random() * 71)]}${arr[Math.round(Math.random() * 71)]}${arr[Math.round(Math.random() * 71)]}${arr[Math.round(Math.random() * 71)]}`;
@@ -198,7 +250,7 @@ export class UserController {
                   src: `${process.env.SERVER_BASE_URL}/${location}${bvid}/`,
                   name: `${files.cover[0].originalname}`,
                 }],
-                detail: [ time, '0观看', '0弹幕' ],
+                detail: [time, '0观看', '0弹幕'],
                 title,
               },
             },
@@ -256,7 +308,7 @@ export class UserController {
       return res.status(HttpStatus.OK).json({ message: '投稿成功！', result });
     } catch (error) {
 
-      return res.status(HttpStatus.BAD_REQUEST).json({ data: '请检查参数是否正确', error });
+      return res.status(HttpStatus.BAD_REQUEST).json({ data: '请检查参数是否正确', err: -1 });
     }
 
   }
