@@ -118,16 +118,16 @@ export class UserController {
   @Get('base-info')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  @ApiQuery({ type: String })
+  @ApiQuery({ name: 'bug，不需要注意', type: String })
   @ApiOperation({ description: 'Get, 获取用户数据，参数：username' })
-  async baseInfo(@Res() res, @Query() query) {
+  async baseInfo(@Res() res, @Query() query, @CurrentUser() user: UserDocument) {
     try {
       let a;
       let b;
       let data;
       const front = 'E:/VScode/bilibili/';
-      const { username } = query;
-      data = (await this.model.find({ username }))[0];
+      // const { username } = query;
+      data = (await this.model.find({ _id: user._id }))[0];
       a = data.baseInfo.bg.src.split(front);
       data.baseInfo.bg.src = `${process.env.SERVER_BASE_URL}/${a[a.length - 1]}`;
       b = data.baseInfo.logo.src.split(front);
@@ -162,7 +162,7 @@ export class UserController {
   @Put('update')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  @ApiQuery({ type: UpdateDto })
+  @ApiQuery({ name: 'bug，不需要注意', type: UpdateDto })
   @ApiOperation({ description: 'Put, 更新用户数据，参数：username，用户名name，desc' })
   async Update(@Res() res, @Query() query: UpdateDto) {
     try {
