@@ -11,6 +11,13 @@ interface Identy {
 
 }
 
+interface Coin {
+
+  Bcoins: string;
+  coins: string;
+
+}
+
 // tslint:disable-next-line: max-classes-per-file
 interface IMG {
 
@@ -160,6 +167,10 @@ export class User {
   @ApiProperty({ name: 'uuid等' })
   @prop()
   identy: Identy;
+
+  @ApiProperty({ name: '硬币' })
+  @prop()
+  coin: Coin;
 
   @ApiProperty({ name: '基本信息' })
   @prop()

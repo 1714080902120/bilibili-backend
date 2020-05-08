@@ -38,7 +38,11 @@ export class UserController {
         uuid,
         uuid_href: `https://m.bilibili.com/space/${uuid}`,
       };
-
+      const coin = {
+        Bcoins: '0',
+        coins: '320',
+      };
+      // tslint:disable-next-line: no-console
       await mkdir(`bilibili_data/user_data/${uuid}`, err => console.log(err));
 
       const baseInfo = {
@@ -79,12 +83,14 @@ export class UserController {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36',
         },
       }).pipe(logo).on('close', err => err);
-      await mkdir(`bilibili_data/user_data/${uuid}/list`, err => console.log(err) );
+      // tslint:disable-next-line: no-console
+      await mkdir(`bilibili_data/user_data/${uuid}/list`, err => console.log(err));
 
       const user = await this.model.create({
         username,
         password,
         identy,
+        coin,
         baseInfo,
         cardList: [],
       });
@@ -96,14 +102,14 @@ export class UserController {
 
   @Post('test')
   async Test() {
-          const sourceBg = `${process.env.SERVER_BASE_URL}/bilibili_data/bilibili_base/user_bg_init.png`;
-          const bg = await createWriteStream(`bilibili_data/user_data/123.png`);
-          request(sourceBg, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36',
-        },
-      }).pipe(bg).on('close', err => err);
-          // createWriteStream(`bilibili_data/user_data/xxx.png`).write(a);
+    const sourceBg = `${process.env.SERVER_BASE_URL}/bilibili_data/bilibili_base/user_bg_init.png`;
+    const bg = await createWriteStream(`bilibili_data/user_data/123.png`);
+    request(sourceBg, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36',
+      },
+    }).pipe(bg).on('close', err => err);
+    // createWriteStream(`bilibili_data/user_data/xxx.png`).write(a);
   }
 
   @Post('login')
@@ -120,7 +126,7 @@ export class UserController {
   @ApiBearerAuth()
   @ApiQuery({ name: 'bug，不需要注意', type: String })
   @ApiOperation({ description: 'Get, 获取用户数据，参数：username' })
-  async baseInfo(@Res() res, @Query() query, @CurrentUser() user: UserDocument) {
+  async baseInfo(@Res() res, @CurrentUser() user: UserDocument) {
     try {
       let a;
       let b;
