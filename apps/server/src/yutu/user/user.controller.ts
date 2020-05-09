@@ -1,3 +1,4 @@
+import { UserService } from './user.service';
 import { JwtService } from '@nestjs/jwt';
 import { UploadData } from './../../../../../libs/db/src/models/upload.model';
 import { FileInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express';
@@ -20,9 +21,17 @@ const request = require('request');
 export class UserController {
   constructor(
     private jwtService: JwtService,
+    private userService: UserService,
     @InjectModel(User) private readonly model,
     @InjectModel(UploadData) private readonly uploadModel,
   ) { }
+
+  @Post('mail-check')
+  @ApiProperty({ name: '注册时邮件验证' })
+  async mailCheck(@Res() res, @Body() body) {
+    const data = await this.userService.sendMail(body);
+    return res.status(HttpStatus.OK).json({ data, err: 0 });
+  }
 
   @Post('register')
   @ApiProperty({ name: '注册' })
