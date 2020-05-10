@@ -49,7 +49,7 @@ export class UserController {
       };
       const coin = {
         Bcoins: '0',
-        coins: '320',
+        coins: '0',
       };
       // tslint:disable-next-line: no-console
       await mkdir(`bilibili_data/user_data/${uuid}`, err => console.log(err));

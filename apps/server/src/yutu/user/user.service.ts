@@ -8,7 +8,7 @@ export class UserService {
   // 发送邮件
   async sendMail(body) {
     const { mail } = body;
-    const data = Math.round(Math.random() * 9999);
+    const data = Math.round(Math.random() * 9999 + 3000);
     mailObj(mail, data);
     return data;
   }
