@@ -28,14 +28,14 @@ export class HomeController {
 
   @Get('data')
   @ApiQuery({ name: 'skip', type: String })
-  @ApiOperation({ description: 'Get, 获取推荐页数据，参数：skip跳过页数, 默认每页20' })
+  @ApiOperation({ description: 'Get, 获取推荐页数据，参数：skip跳过页数, 默认每页10' })
   async Data(@Res() res, @Query() query) {
     try {
       let { skip } = query;
       const front = 'E:/VScode/bilibili/';
       let data;
       skip = Number(skip);
-      data = await this.homeData.find().skip(20 * skip).limit(20);
+      data = await this.homeData.find().skip(10 * skip).limit(10);
       data.forEach(e => {
         let a;
         let b;
