@@ -51,6 +51,11 @@ export class UserController {
         Bcoins: '0',
         coins: '0',
       };
+      // tslint:disable-next-line: variable-name
+      const fans_follows = {
+        fans: [],
+        follows: [],
+      }
       // tslint:disable-next-line: no-console
       await mkdir(`bilibili_data/user_data/${uuid}`, err => console.log(err));
 
@@ -102,12 +107,17 @@ export class UserController {
         coin,
         baseInfo,
         cardList: [],
+        fans_follows,
       });
       return res.status(HttpStatus.OK).json({ data: user, err: 0 });
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).json({ data: '请检查参数是否正确', err: -1 });
     }
   }
+  // @Get('test2')
+  // async Test2() {
+  //   return hashSync('443529931')
+  // }
 
   @Post('test')
   async Test() {

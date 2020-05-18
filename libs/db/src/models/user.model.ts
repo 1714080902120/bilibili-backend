@@ -18,6 +18,22 @@ interface Coin {
 
 }
 
+interface FansOrFollows {
+
+  name: string;
+  desc: string;
+  href: string;
+  img: string;
+
+}
+
+interface Fans_Follows {
+
+  fans: FansOrFollows[];
+  follows: FansOrFollows[];
+
+}
+
 // tslint:disable-next-line: max-classes-per-file
 interface IMG {
 
@@ -179,5 +195,9 @@ export class User {
   @ApiProperty({ name: '稿件' })
   @arrayProp({ items: Items })
   cardList: Item[];
+
+  @ApiProperty({ name: '关注/粉丝人信息' })
+  // tslint:disable-next-line: variable-name
+  fans_follows: Fans_Follows;
 
 }
