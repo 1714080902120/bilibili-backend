@@ -176,7 +176,6 @@ export class UserController {
         }
 
       }
-
       return res.status(HttpStatus.OK).json(data);
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).json({ data: '请检查参数是否正确', err: -1 });
