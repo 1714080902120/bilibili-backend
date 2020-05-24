@@ -12,6 +12,7 @@ import { RegisterDto } from './dto/register.dto';
 import { UpdateDto, PostDto, AddCardDto } from './dto/others.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { LoginDto } from './dto/login.dto';
+import zhenzismsClient = require('./zhenzisms');
 import { CurrentUser } from './current-user.decorator.1';
 // tslint:disable-next-line: no-var-requires
 const request = require('request');
@@ -55,7 +56,7 @@ export class UserController {
       const fans_follows = {
         fans: [],
         follows: [],
-      }
+      };
       // tslint:disable-next-line: no-console
       await mkdir(`bilibili_data/user_data/${uuid}`, err => console.log(err));
 
@@ -138,6 +139,31 @@ export class UserController {
     return {
       token: this.jwtService.sign(String(user._id)),
     };
+  }
+
+  @Post('send')
+  @ApiProperty({ name: '短信验证' })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async send(@Body() body) {
+    const { phoneNumber } = body;
+    const verification = Math.round(Math.random() * 99999);
+    const apiUrl = 'sms_developer.zhenzikj.com';
+    const appId = 'xxx';
+    const appSecret = 'xxxxx';
+    const client = await new zhenzismsClient(apiUrl, appId, appSecret);
+    const params = {
+      templateId: 'xxx',
+      number: phoneNumber,
+      templateParams: [verification, '5分钟'],
+    };
+    const res = await client.send(params);
+    const last = await client.balance();
+    if (res.code === 0) {
+      return verification;
+    } else {
+      return -1;
+    }
   }
 
   @Get('base-info')
