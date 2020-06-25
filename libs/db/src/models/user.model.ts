@@ -27,6 +27,7 @@ interface FansOrFollows {
 
 }
 
+// tslint:disable-next-line: class-name
 interface Fans_Follows {
 
   fans: FansOrFollows[];
@@ -197,6 +198,7 @@ export class User {
   cardList: Item[];
 
   @ApiProperty({ name: '关注/粉丝人信息' })
+  @prop()
   // tslint:disable-next-line: variable-name
   fans_follows: Fans_Follows;
 

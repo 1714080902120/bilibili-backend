@@ -26,6 +26,65 @@ export class HomeController {
     return res.status(HttpStatus.OK).json(data);
   }
 
+  @Get('search')
+  @ApiQuery({ name: 'keyword', type: String })
+  @ApiOperation({ description: 'Get, 获取推荐页数据，参数：keyword, 模糊查询, 参数：skip跳过页数, 默认每页10' })
+  async Search(@Res() res, @Query() query) {
+    try {
+      let { keyword, skip } = query;
+      const front = 'E:/VScode/bilibili/';
+      let data;
+      let reg = new RegExp(keyword ,'gi')
+      skip = Number(skip);
+      data = await this.homeData.find({ 'title': reg }).skip(10 * skip).limit(10);
+      data.forEach(e => {
+        let a;
+        let b;
+        let like;
+        let coins;
+        let collect;
+        let share;
+        like = Math.round(Math.random() * 60000);
+        coins = Math.round(Math.random() * 30000);
+        collect = Math.round(Math.random() * 50000);
+        share = Math.round(Math.random() * 30000);
+        if (like >= 10000) {
+          like = (like / 10000).toFixed(1) + '万';
+        }
+        if (coins >= 10000) {
+          coins = (coins / 10000).toFixed(1) + '万';
+        }
+        if (collect >= 10000) {
+          collect = (collect / 10000).toFixed(1) + '万';
+        }
+        if (share >= 10000) {
+          share = (share / 10000).toFixed(1) + '万';
+        }
+        a = e.img.src.split(front);
+        e.img.src = `${process.env.SERVER_BASE_URL}/${a[a.length - 1]}`;
+        b = e.video.src.split(front);
+        e.video.src = `${process.env.SERVER_BASE_URL}/${b[b.length - 1]}`;
+        e.video.people_feel = {
+          like,
+          disLike: '0',
+          coins,
+          collect,
+          share,
+        };
+        e.assess.detail.forEach(ee => {
+          let c;
+          c = ee.src.split(front);
+          ee.src = `${process.env.SERVER_BASE_URL}/${c[c.length - 1]}`;
+        });
+      });
+
+      return res.status(HttpStatus.OK).json(data);
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).json({ data: '请检查参数是否正确', error });
+    }
+
+  }
+
   @Get('data')
   @ApiQuery({ name: 'skip', type: String })
   @ApiOperation({ description: 'Get, 获取推荐页数据，参数：skip跳过页数, 默认每页10' })

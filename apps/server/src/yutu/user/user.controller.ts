@@ -14,6 +14,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { LoginDto } from './dto/login.dto';
 import zhenzismsClient = require('./zhenzisms');
 import { CurrentUser } from './current-user.decorator.1';
+import axios from 'axios';
 // tslint:disable-next-line: no-var-requires
 const request = require('request');
 
@@ -40,7 +41,8 @@ export class UserController {
     try {
       const { username, password } = dto;
       if ((await this.model.find({ username })).length !== 0) {
-        return res.status(HttpStatus.BAD_REQUEST).json({ data: '该用户名已存在', err: -2 });
+
+        return res.status(HttpStatus.OK).json({ data: '该用户名已存在', err: -2 });
       }
       const uuid = Math.round(50000 + Math.random() * 9949999).toString();
 
@@ -169,7 +171,7 @@ export class UserController {
   @Get('base-info')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  @ApiQuery({ name: 'bug，不需要注意', type: String })
+  // @ApiQuery({ name: 'bug，不需要注意', type: String })
   @ApiOperation({ description: 'Get, 获取用户数据，参数：username' })
   async baseInfo(@Res() res, @CurrentUser() user: UserDocument) {
     try {
@@ -212,7 +214,7 @@ export class UserController {
   @Put('update')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  @ApiQuery({ name: 'bug，不需要注意', type: UpdateDto })
+  // @ApiQuery({ name: 'bug，不需要注意', type: UpdateDto })
   @ApiOperation({ description: 'Put, 更新用户数据，参数：username，用户名name，desc' })
   async Update(@Res() res, @Query() query: UpdateDto) {
     try {
@@ -359,6 +361,23 @@ export class UserController {
     } catch (error) {
 
       return res.status(HttpStatus.BAD_REQUEST).json({ data: '请检查参数是否正确', err: -1 });
+    }
+
+  }
+
+  @Get('position')
+  @ApiOperation({ description: 'Get, 获取用户的地址，无参数' })
+  async Assess(@Res() res, @Query() query) {
+    try {
+      let data
+      data = await axios.post('https://pv.sohu.com/cityjson?ie=utf-8', {}).then(async res => {
+        return JSON.parse(res.data.split(" = ")[1].split(";")[0]);
+      }).catch(err => {
+        console.log(err);
+      })
+      return res.status(HttpStatus.OK).json(data);
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).json({ data: '请检查参数是否正确', error });
     }
 
   }
